@@ -6,13 +6,20 @@ const validUrl = require('valid-url');
 
 const ShortenedUrlInfo = require('../models/shortenedUrlInfo');
 
+router.get('/:shortened', async (req, res) => {
+    const shortenedUrl = await ShortenedUrlInfo.findOne({ shortUrl: req.params.shortened });
+
+    if (!shortenedUrl) res.send({ error: 'No shortened URL found.' })
+
+    res.redirect(shortenedUrl.originalUrl);
+});
+
 router.post('/new', async (req, res) => {
     const reqUrl = req.body.url;
-    console.log(req.body);
     if (validUrl.isUri(reqUrl)) {
         const urlProperties = url.parse(reqUrl);
         dns.lookup(urlProperties.hostname, async (err, addr) => {
-            if (err) return res.send({ error: 'Invalid hostname' });
+            if (err) return res.send({ error: 'Invalid hostname.' });
             // Check if URL is already saved.
             const savedDoc = await ShortenedUrlInfo.findOne({ originalUrl: reqUrl });
             if (!savedDoc) {
@@ -39,7 +46,7 @@ router.post('/new', async (req, res) => {
             }
         });
     } else {
-        res.send({ error: 'invalid URL' });
+        res.send({ error: 'Invalid URL.' });
     }
 });
 
